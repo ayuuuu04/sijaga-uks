@@ -6,6 +6,49 @@
 <title>SiJaga UKS — Aplikasi PMR</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, doc, getDocs, addDoc, deleteDoc, setDoc, onSnapshot, serverTimestamp }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  // ============================================================
+  //  🔥 GANTI DENGAN KONFIGURASI FIREBASE KAMU DI SINI
+  //  Buat project di https://console.firebase.google.com
+  //  Project Settings > Your apps > Web app > Config
+  // ============================================================
+  const firebaseConfig = {
+    apiKey: "GANTI_API_KEY_KAMU",
+    authDomain: "GANTI.firebaseapp.com",
+    projectId: "GANTI_PROJECT_ID",
+    storageBucket: "GANTI.appspot.com",
+    messagingSenderId: "GANTI",
+    appId: "GANTI"
+  };
+  // ============================================================
+
+  let db = null;
+  let firebaseReady = false;
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    firebaseReady = true;
+    console.log('✅ Firebase terhubung!');
+  } catch (e) {
+    console.warn('⚠️ Firebase gagal terhubung, pakai localStorage:', e.message);
+  }
+
+  // Expose ke global scope
+  window._fb = {
+    ready: () => firebaseReady && db !== null,
+    db: () => db,
+    collection, doc, getDocs, addDoc, deleteDoc, setDoc, onSnapshot, serverTimestamp
+  };
+
+  // Dispatch event saat firebase siap
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -193,6 +236,40 @@
   .grid4 .stat:nth-child(4){animation-delay:.2s}
   .grid2 .card:nth-child(1){animation-delay:.1s}
   .grid2 .card:nth-child(2){animation-delay:.18s}
+
+  /* UPACARA GRID */
+  .upacara-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:10px}
+  .pos-card{background:var(--bg);border:2px solid var(--border);border-radius:var(--radius-sm);padding:12px;transition:all .2s;position:relative;overflow:hidden}
+  .pos-card:hover{border-color:var(--border2);box-shadow:var(--shadow-sm);transform:translateY(-2px)}
+  .pos-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--red);border-radius:2px 0 0 2px}
+  .pos-card-title{font-size:12px;font-weight:800;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+  .pos-card-sub{font-size:11px;color:var(--text2);font-weight:600;line-height:1.6}
+  .pos-members{display:flex;flex-direction:column;gap:3px;margin-top:6px}
+  .pos-member-chip{background:var(--red-dim);color:var(--red);border-radius:20px;padding:2px 8px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;gap:4px;width:fit-content}
+
+  /* FIREBASE STATUS BADGE */
+  .fb-status{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .2s}
+  .fb-status.connected{background:#d4f7e2;color:var(--green-text)}
+  .fb-status.disconnected{background:var(--amber-dim);color:var(--amber-text)}
+  .fb-status.error{background:var(--red-dim);color:var(--red)}
+  .fb-dot{width:7px;height:7px;border-radius:50%;animation:blink 1.5s infinite}
+  .fb-dot.green{background:var(--green-text);box-shadow:0 0 5px var(--green)}
+  .fb-dot.amber{background:var(--amber-text)}
+  .fb-dot.red{background:var(--red)}
+
+  /* FIREBASE CONFIG MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(61,35,64,.5);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{background:#fff;border-radius:var(--radius);padding:24px;width:90%;max-width:520px;box-shadow:var(--shadow);animation:modalIn .3s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes modalIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+  .modal-title{font-size:16px;font-weight:900;color:var(--text);margin-bottom:4px;font-family:'Fredoka One',sans-serif;display:flex;align-items:center;gap:8px}
+  .modal-sub{font-size:12px;color:var(--text2);margin-bottom:16px;font-weight:600}
+  .code-hint{background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;font-size:11px;color:var(--text2);margin-bottom:14px;border:2px dashed var(--border);font-weight:600;line-height:1.7}
+
+  /* TABS */
+  .tab-row{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:var(--radius-sm);margin-bottom:14px;width:fit-content}
+  .tab-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;color:var(--text2);background:none;border:none;transition:all .2s;font-family:'Nunito',sans-serif}
+  .tab-btn.active{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(232,83,122,.3)}
 </style>
 </head>
 <body>
@@ -209,6 +286,9 @@
     </div>
     <div class="header-right">
       <span class="hbadge"><span class="dot"></span> Aktif</span>
+      <span id="fb-status-badge" class="fb-status disconnected" onclick="openFbModal()" title="Klik untuk konfigurasi Firebase">
+        <span class="fb-dot amber"></span>Lokal
+      </span>
       <span id="clock-display"></span>
     </div>
   </header>
@@ -228,6 +308,9 @@
     </button>
     <button class="nav-btn" onclick="showPage('jadwal')" id="nav-jadwal">
       <i class="ti ti-calendar-event"></i>Jadwal Jaga<span class="nav-pip"></span>
+    </button>
+    <button class="nav-btn" onclick="showPage('upacara')" id="nav-upacara">
+      <i class="ti ti-flag"></i>Jadwal Upacara<span class="nav-pip"></span>
     </button>
     <button class="nav-btn" onclick="showPage('laporan')" id="nav-laporan">
       <i class="ti ti-report-analytics"></i>Laporan<span class="nav-pip"></span>
@@ -257,13 +340,133 @@
 })();
 
 // =====================
-//   DATA STORE (localStorage)
+//   DATA STORE (localStorage + Firebase sync)
 // =====================
 const DB = {
   get(k) { try { return JSON.parse(localStorage.getItem('pmr_' + k) || 'null') } catch { return null } },
-  set(k, v) { localStorage.setItem('pmr_' + k, JSON.stringify(v)) },
+  set(k, v) {
+    localStorage.setItem('pmr_' + k, JSON.stringify(v));
+    // Sync ke Firebase jika tersambung
+    if (window._fb?.ready()) {
+      const { db, doc, setDoc, serverTimestamp } = window._fb;
+      setDoc(doc(db(), 'pmr_data', k), { value: v, updatedAt: serverTimestamp() })
+        .catch(e => console.warn('Firebase sync error:', e));
+    }
+  },
   def(k, v) { if (!this.get(k)) this.set(k, v) }
 };
+
+// Sync FROM Firebase ke localStorage
+async function syncFromFirebase() {
+  if (!window._fb?.ready()) return;
+  const { db, collection, getDocs } = window._fb;
+  try {
+    const snap = await getDocs(collection(db(), 'pmr_data'));
+    snap.forEach(d => {
+      const data = d.data();
+      if (data.value !== undefined) {
+        localStorage.setItem('pmr_' + d.id, JSON.stringify(data.value));
+      }
+    });
+    updateFbStatus('connected');
+    toast('✅ Data tersinkron dari Firebase!');
+    // Refresh halaman aktif
+    const activeNav = document.querySelector('.nav-btn.active');
+    if (activeNav) {
+      const page = activeNav.id.replace('nav-', '');
+      if (pages[page]) pages[page](document.getElementById('main-content'));
+    }
+  } catch (e) {
+    console.warn('Sync error:', e);
+    updateFbStatus('error');
+  }
+}
+
+function updateFbStatus(state) {
+  const badge = document.getElementById('fb-status-badge');
+  if (!badge) return;
+  const labels = { connected: '☁️ Firebase', disconnected: '💾 Lokal', error: '⚠️ Error' };
+  const dotClass = { connected: 'green', disconnected: 'amber', error: 'red' };
+  badge.className = `fb-status ${state}`;
+  badge.innerHTML = `<span class="fb-dot ${dotClass[state]}"></span>${labels[state]}`;
+}
+
+// Realtime listener
+function startFirebaseListener() {
+  if (!window._fb?.ready()) return;
+  const { db, collection, onSnapshot } = window._fb;
+  onSnapshot(collection(db(), 'pmr_data'), (snap) => {
+    snap.forEach(d => {
+      const data = d.data();
+      if (data.value !== undefined) {
+        localStorage.setItem('pmr_' + d.id, JSON.stringify(data.value));
+      }
+    });
+    updateFbStatus('connected');
+  }, (err) => {
+    console.warn('Realtime listener error:', err);
+    updateFbStatus('error');
+  });
+}
+
+// Firebase Config Modal
+window.openFbModal = function() {
+  const saved = JSON.parse(localStorage.getItem('pmr_fb_config') || '{}');
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'fb-modal';
+  overlay.innerHTML = `
+  <div class="modal">
+    <div class="modal-title">🔥 Konfigurasi Firebase</div>
+    <div class="modal-sub">Hubungkan ke Google Firebase Firestore untuk sync data ke cloud ☁️</div>
+    <div class="code-hint">
+      1. Buka <strong>console.firebase.google.com</strong><br>
+      2. Buat project → tambah Web App<br>
+      3. Copy config dan paste di bawah<br>
+      4. Di Firestore → Rules, set: <code>allow read, write: if true;</code>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>API Key</label><input id="fb-apikey" placeholder="AIzaSy..." value="${saved.apiKey||''}"></div>
+      <div class="form-group"><label>Project ID</label><input id="fb-projectid" placeholder="nama-project-ku" value="${saved.projectId||''}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Auth Domain</label><input id="fb-authdomain" placeholder="project.firebaseapp.com" value="${saved.authDomain||''}"></div>
+      <div class="form-group"><label>App ID</label><input id="fb-appid" placeholder="1:xxx:web:xxx" value="${saved.appId||''}"></div>
+    </div>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn btn-red" onclick="saveFbConfig()"><i class="ti ti-brand-firebase"></i>Simpan & Hubungkan</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('fb-modal').remove()">Batal</button>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text3);font-weight:600">
+      💡 Config tersimpan di browser kamu. Setelah simpan, refresh halaman.
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+};
+
+window.saveFbConfig = function() {
+  const cfg = {
+    apiKey: document.getElementById('fb-apikey').value.trim(),
+    projectId: document.getElementById('fb-projectid').value.trim(),
+    authDomain: document.getElementById('fb-authdomain').value.trim(),
+    appId: document.getElementById('fb-appid').value.trim(),
+  };
+  if (!cfg.apiKey || !cfg.projectId) return toast('API Key dan Project ID wajib diisi! 💕');
+  localStorage.setItem('pmr_fb_config', JSON.stringify(cfg));
+  document.getElementById('fb-modal')?.remove();
+  toast('✅ Config disimpan! Refresh halaman untuk terhubung ke Firebase.');
+};
+
+// Cek apakah firebase sudah terkonek saat page load
+window.addEventListener('firebase-ready', () => {
+  if (window._fb?.ready()) {
+    updateFbStatus('connected');
+    startFirebaseListener();
+    syncFromFirebase();
+  } else {
+    updateFbStatus('disconnected');
+  }
+});
 
 DB.def('pasien', [
   { id: 1, tanggal: '2025-05-12', nama: 'Budi Santoso', kelas: 'X-A', keluhan: 'Pusing dan mual', tindakan: 'Istirahat, minum air', status: 'Sembuh' },
@@ -292,6 +495,22 @@ DB.def('jadwal', [
   { id: 3, hari: 'Selasa', sesi: '07:00-10:00', anggota: 'Fajar Nugroho', lokasi: 'UKS' },
   { id: 4, hari: 'Rabu', sesi: '10:00-13:00', anggota: 'Nisa Amalia', lokasi: 'UKS' },
   { id: 5, hari: 'Kamis', sesi: '07:00-10:00', anggota: 'Rizki Aditya', lokasi: 'UKS' },
+]);
+DB.def('upacara', [
+  {
+    id: 1,
+    tanggal: '2025-08-17',
+    nama: 'Upacara HUT RI ke-80',
+    keterangan: 'Upacara bendera hari kemerdekaan',
+    titikJaga: [
+      { pos: 'Lapangan Utama', anggota: ['Afnan Fauzan', 'Faizal'] },
+      { pos: 'Pintu Masuk', anggota: ['Galuh Ayu'] },
+      { pos: 'Tribun Tamu', anggota: ['Nisa Amalia', 'Rizki Aditya'] },
+    ]
+  }
+]);
+DB.def('titik_jaga_template', [
+  'Lapangan Utama', 'Pintu Masuk', 'Tribun Tamu', 'Parkiran', 'Aula', 'Kantin', 'Koridor Kelas', 'Pos Cadangan'
 ]);
 
 // =====================
@@ -832,6 +1051,255 @@ window.delJadwal = function(id) {
   DB.set('jadwal', (DB.get('jadwal') || []).filter(j => j.id !== id));
   if (window.renderJadwalGrid) renderJadwalGrid();
   toast('Jadwal dihapus 🗑️');
+};
+
+// =====================
+//   JADWAL UPACARA
+// =====================
+pages.upacara = function(m) {
+  const anggota = DB.get('anggota') || [];
+  const titikTemplate = DB.get('titik_jaga_template') || [];
+
+  function renderList() {
+    const list = DB.get('upacara') || [];
+    const container = document.getElementById('upacara-list');
+    if (!container) return;
+    if (!list.length) {
+      container.innerHTML = '<div class="empty"><i class="ti ti-calendar-off"></i>Belum ada jadwal upacara</div>';
+      return;
+    }
+    container.innerHTML = list.slice().sort((a,b) => b.tanggal.localeCompare(a.tanggal)).map(u => {
+      const totalAnggota = u.titikJaga.reduce((s, t) => s + t.anggota.length, 0);
+      return `
+      <div class="card" style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:15px;font-weight:900;color:var(--text);font-family:'Fredoka One',sans-serif;display:flex;align-items:center;gap:7px">
+              🚩 ${u.nama}
+            </div>
+            <div style="font-size:12px;color:var(--text2);font-weight:600;margin-top:3px">${fmt(u.tanggal)} • ${u.keterangan || '-'}</div>
+            <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap">
+              <span class="badge badge-red"><i class="ti ti-map-pin"></i>${u.titikJaga.length} titik jaga</span>
+              <span class="badge badge-blue"><i class="ti ti-users"></i>${totalAnggota} anggota bertugas</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="editUpacara(${u.id})"><i class="ti ti-edit"></i>Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="delUpacara(${u.id})"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+        <hr style="border:none;border-top:2px solid var(--border);margin:12px 0">
+        <div class="card-title" style="margin-bottom:10px"><i class="ti ti-map-pins"></i>Pembagian Titik Jaga</div>
+        <div class="upacara-grid">
+          ${u.titikJaga.map((t, ti) => `
+          <div class="pos-card">
+            <div class="pos-card-title">📍 ${t.pos}</div>
+            <div class="pos-members">
+              ${t.anggota.length
+                ? t.anggota.map(a => `<span class="pos-member-chip">👤 ${a}</span>`).join('')
+                : '<span style="font-size:11px;color:var(--text3);font-weight:600">Belum ada anggota</span>'}
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="delTitikJaga(${u.id},${ti})" style="margin-top:8px;font-size:11px;padding:3px 8px">
+              <i class="ti ti-trash"></i>Hapus Pos
+            </button>
+          </div>`).join('')}
+          <div class="pos-card" style="border-style:dashed;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:80px" onclick="tambahTitikJaga(${u.id})">
+            <span style="color:var(--text3);font-size:12px;font-weight:700;text-align:center">➕ Tambah<br>Titik Jaga</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  m.innerHTML = `
+  <div class="sec-header">
+    <div class="sec-title"><i class="ti ti-flag"></i>Jadwal Upacara 🚩</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-plus"></i>Tambah Jadwal Upacara</div>
+    <div class="form-row">
+      <div class="form-group"><label>Tanggal Upacara</label><input type="date" id="up-tgl" value="${today()}"></div>
+      <div class="form-group" style="flex:2"><label>Nama Kegiatan</label><input type="text" id="up-nama" placeholder="cth: Upacara HUT RI ke-80"></div>
+      <div class="form-group" style="flex:2"><label>Keterangan</label><input type="text" id="up-ket" placeholder="Keterangan singkat"></div>
+    </div>
+    <hr style="border:none;border-top:2px solid var(--border);margin:10px 0">
+    <div class="card-title" style="margin-bottom:10px"><i class="ti ti-map-pin"></i>Titik Jaga Awal</div>
+    <div id="titik-builder">
+      <div class="titik-row form-row" data-idx="0">
+        <div class="form-group">
+          <label>Nama Pos / Titik Jaga</label>
+          <input type="text" class="titik-pos" placeholder="cth: Lapangan Utama" list="pos-suggestions">
+          <datalist id="pos-suggestions">${titikTemplate.map(t => `<option>${t}</option>`).join('')}</datalist>
+        </div>
+        <div class="form-group" style="flex:2">
+          <label>Anggota Bertugas (pilih lebih dari satu)</label>
+          <select class="titik-anggota" multiple style="height:70px">
+            ${anggota.map(a => `<option value="${a.nama}">${a.nama} (${a.kelas})</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:flex;align-items:flex-end;padding-bottom:2px">
+          <button class="btn btn-danger btn-sm" onclick="this.closest('.titik-row').remove()"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn btn-ghost btn-sm" onclick="addTitikRow()"><i class="ti ti-plus"></i>Tambah Titik Jaga</button>
+      <button class="btn btn-red" onclick="saveUpacara()"><i class="ti ti-device-floppy"></i>Simpan Upacara</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-list"></i>Daftar Jadwal Upacara</div>
+    <div id="upacara-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-map-pins"></i>Kelola Template Titik Jaga</div>
+    <div class="form-row" style="align-items:flex-end">
+      <div class="form-group"><label>Nama Titik Jaga Baru</label><input type="text" id="titik-baru" placeholder="cth: Pos Kesehatan"></div>
+      <button class="btn btn-ghost" onclick="addTitikTemplate()"><i class="ti ti-plus"></i>Tambah Template</button>
+    </div>
+    <div id="titik-template-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+      ${titikTemplate.map((t,i) => `
+        <span style="background:var(--red-dim);color:var(--red);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:5px">
+          📍${t} <span style="cursor:pointer;opacity:.6" onclick="delTitikTemplate(${i})">✕</span>
+        </span>`).join('')}
+    </div>
+  </div>`;
+
+  window.renderUpacaraList = renderList;
+  renderList();
+};
+
+window.addTitikRow = function() {
+  const anggota = DB.get('anggota') || [];
+  const titikTemplate = DB.get('titik_jaga_template') || [];
+  const builder = document.getElementById('titik-builder');
+  const div = document.createElement('div');
+  div.className = 'titik-row form-row';
+  div.innerHTML = `
+    <div class="form-group">
+      <label>Nama Pos / Titik Jaga</label>
+      <input type="text" class="titik-pos" placeholder="cth: Pintu Masuk" list="pos-suggestions">
+    </div>
+    <div class="form-group" style="flex:2">
+      <label>Anggota Bertugas</label>
+      <select class="titik-anggota" multiple style="height:70px">
+        ${anggota.map(a => `<option value="${a.nama}">${a.nama} (${a.kelas})</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:flex;align-items:flex-end;padding-bottom:2px">
+      <button class="btn btn-danger btn-sm" onclick="this.closest('.titik-row').remove()"><i class="ti ti-trash"></i></button>
+    </div>`;
+  builder.appendChild(div);
+};
+
+window.saveUpacara = function() {
+  const nama = document.getElementById('up-nama').value.trim();
+  if (!nama) return toast('Nama kegiatan wajib diisi! 💕');
+
+  const rows = document.querySelectorAll('.titik-row');
+  const titikJaga = [];
+  rows.forEach(row => {
+    const pos = row.querySelector('.titik-pos').value.trim();
+    const sel = row.querySelector('.titik-anggota');
+    const angg = Array.from(sel.selectedOptions).map(o => o.value);
+    if (pos) titikJaga.push({ pos, anggota: angg });
+  });
+
+  const list = DB.get('upacara') || [];
+  list.push({
+    id: Date.now(),
+    tanggal: document.getElementById('up-tgl').value,
+    nama,
+    keterangan: document.getElementById('up-ket').value,
+    titikJaga
+  });
+  DB.set('upacara', list);
+
+  document.getElementById('up-nama').value = '';
+  document.getElementById('up-ket').value = '';
+  document.getElementById('titik-builder').querySelectorAll('.titik-row').forEach((r,i) => { if(i>0) r.remove(); });
+  document.querySelector('.titik-pos') && (document.querySelector('.titik-pos').value = '');
+
+  if (window.renderUpacaraList) renderUpacaraList();
+  toast('Jadwal upacara disimpan! 🚩');
+};
+
+window.delUpacara = function(id) {
+  if (!confirm('Hapus jadwal upacara ini?')) return;
+  DB.set('upacara', (DB.get('upacara') || []).filter(u => u.id !== id));
+  if (window.renderUpacaraList) renderUpacaraList();
+  toast('Jadwal dihapus 🗑️');
+};
+
+window.tambahTitikJaga = function(upacaraId) {
+  const anggota = DB.get('anggota') || [];
+  const titikTemplate = DB.get('titik_jaga_template') || [];
+  const posName = prompt('Nama titik jaga baru (cth: Pos Utama):');
+  if (!posName?.trim()) return;
+  const pilihanAnggota = anggota.map((a, i) => `${i+1}. ${a.nama} (${a.kelas})`).join('\n');
+  const pilihanStr = prompt(`Pilih nomor anggota (pisah koma, bisa lebih dari satu):\n${pilihanAnggota}\n\n(kosongkan jika belum ada)`);
+  const indices = (pilihanStr || '').split(',').map(s => parseInt(s.trim()) - 1).filter(i => i >= 0 && i < anggota.length);
+  const anggotaDipilih = indices.map(i => anggota[i].nama);
+
+  const list = DB.get('upacara') || [];
+  const upacara = list.find(u => u.id === upacaraId);
+  if (!upacara) return;
+  upacara.titikJaga.push({ pos: posName.trim(), anggota: anggotaDipilih });
+  DB.set('upacara', list);
+  if (window.renderUpacaraList) renderUpacaraList();
+  toast('Titik jaga ditambahkan! 📍');
+};
+
+window.delTitikJaga = function(upacaraId, titikIdx) {
+  if (!confirm('Hapus titik jaga ini?')) return;
+  const list = DB.get('upacara') || [];
+  const upacara = list.find(u => u.id === upacaraId);
+  if (upacara) { upacara.titikJaga.splice(titikIdx, 1); DB.set('upacara', list); }
+  if (window.renderUpacaraList) renderUpacaraList();
+  toast('Titik jaga dihapus');
+};
+
+window.editUpacara = function(id) {
+  const list = DB.get('upacara') || [];
+  const u = list.find(x => x.id === id);
+  if (!u) return;
+  const nama = prompt('Nama kegiatan:', u.nama);
+  if (nama === null) return;
+  const ket = prompt('Keterangan:', u.keterangan);
+  if (nama.trim()) u.nama = nama.trim();
+  u.keterangan = ket || '';
+  DB.set('upacara', list);
+  if (window.renderUpacaraList) renderUpacaraList();
+  toast('Jadwal diperbarui! ✏️');
+};
+
+window.addTitikTemplate = function() {
+  const val = document.getElementById('titik-baru').value.trim();
+  if (!val) return toast('Nama titik wajib diisi!');
+  const list = DB.get('titik_jaga_template') || [];
+  list.push(val);
+  DB.set('titik_jaga_template', list);
+  document.getElementById('titik-baru').value = '';
+  const cont = document.getElementById('titik-template-list');
+  if (cont) cont.innerHTML = list.map((t,i) => `
+    <span style="background:var(--red-dim);color:var(--red);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:5px">
+      📍${t} <span style="cursor:pointer;opacity:.6" onclick="delTitikTemplate(${i})">✕</span>
+    </span>`).join('');
+  toast('Template ditambahkan! 📍');
+};
+
+window.delTitikTemplate = function(idx) {
+  const list = DB.get('titik_jaga_template') || [];
+  list.splice(idx, 1);
+  DB.set('titik_jaga_template', list);
+  const cont = document.getElementById('titik-template-list');
+  if (cont) cont.innerHTML = list.map((t,i) => `
+    <span style="background:var(--red-dim);color:var(--red);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:5px">
+      📍${t} <span style="cursor:pointer;opacity:.6" onclick="delTitikTemplate(${i})">✕</span>
+    </span>`).join('');
 };
 
 // =====================
