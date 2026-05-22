@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SiJaga UKS — Aplikasi PMR</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#fef6fb;--bg2:#fff0f8;--bg3:#fde8f4;--bg4:#f9d6ec;
+    --red:#e8537a;--red2:#d63f68;--red3:#ff7fa3;--red-dim:#fde0e9;
+    --text:#3d2340;--text2:#8a6a8a;--text3:#b89ab8;
+    --border:#f0c8e0;--border2:#e8a8d0;
+    --green:#3dba6e;--green-dim:#d4f7e2;--green-text:#2a9a58;
+    --amber:#f0900a;--amber-dim:#fff0d0;--amber-text:#c07000;
+    --blue:#4a98e8;--blue-dim:#ddeeff;--blue-text:#2070c8;
+    --purple:#a060e8;--purple-dim:#efe0ff;
+    --radius:16px;--radius-sm:10px;
+    --shadow:0 4px 20px rgba(232,83,122,.12);
+    --shadow-sm:0 2px 10px rgba(232,83,122,.08);
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;min-height:100vh;display:flex;flex-direction:column}
+
+  /* FLOATING HEARTS BACKGROUND */
+  .floaties{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
+  .floatie{position:absolute;bottom:-40px;font-size:18px;opacity:0;animation:floatUp linear infinite}
+  @keyframes floatUp{
+    0%{opacity:0;transform:translateY(0) rotate(0deg) scale(0.8)}
+    10%{opacity:.35}
+    90%{opacity:.15}
+    100%{opacity:0;transform:translateY(-110vh) rotate(360deg) scale(1.2)}
+  }
+
+  /* LAYOUT */
+  #app{display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1}
+  header{background:linear-gradient(135deg,#ff9ebe 0%,#e8537a 50%,#c83a6a 100%);padding:0 20px;display:flex;align-items:center;gap:12px;height:60px;flex-shrink:0;box-shadow:0 4px 20px rgba(232,83,122,.3);position:sticky;top:0;z-index:10}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px;color:#fff;font-family:'Fredoka One',sans-serif;letter-spacing:.5px}
+  .logo-badge{background:#fff;color:var(--red);border-radius:20px;padding:3px 10px;font-size:13px;font-weight:900;letter-spacing:.5px;box-shadow:0 2px 8px rgba(0,0,0,.15);animation:badgePop .4s ease}
+  @keyframes badgePop{0%{transform:scale(0)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+  .logo-heart{font-size:20px;animation:heartbeat 1.5s ease-in-out infinite}
+  @keyframes heartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+  .logo-sep{color:rgba(255,255,255,.5);margin:0 2px}
+  .header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .hbadge{background:rgba(255,255,255,.25);color:#fff;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;gap:5px}
+  .hbadge .dot{width:7px;height:7px;background:#7fff9a;border-radius:50%;box-shadow:0 0 6px #7fff9a;animation:blink 1.2s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  #clock-display{font-size:12px;color:rgba(255,255,255,.9);font-weight:700;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:12px;font-family:'Nunito',sans-serif}
+
+  nav{background:#fff;border-bottom:2px solid var(--border);display:flex;gap:0;overflow-x:auto;flex-shrink:0;padding:0 12px;position:sticky;top:60px;z-index:9;box-shadow:var(--shadow-sm)}
+  .nav-btn{background:none;border:none;color:var(--text2);padding:13px 15px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s;font-family:'Nunito',sans-serif;font-weight:700;border-radius:0}
+  .nav-btn:hover{color:var(--red);background:var(--red-dim)}
+  .nav-btn.active{color:var(--red);border-bottom-color:var(--red);background:var(--red-dim)}
+  .nav-btn i{font-size:17px}
+  .nav-btn .nav-pip{width:5px;height:5px;background:var(--red);border-radius:50%;margin-left:2px;display:none}
+  .nav-btn.active .nav-pip{display:block;animation:pippop .3s ease}
+  @keyframes pippop{0%{transform:scale(0)}100%{transform:scale(1)}}
+
+  main{flex:1;overflow-y:auto;padding:20px;background:var(--bg)}
+
+  /* CARDS */
+  .card{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;animation:cardIn .35s ease both}
+  .card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+  @keyframes cardIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .card-title{font-size:12px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+  .card-title i{font-size:16px;color:var(--red3)}
+
+  /* GRID */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+  /* STAT */
+  .stat{background:linear-gradient(135deg,var(--red-dim),#fff8fc);border-radius:var(--radius);padding:16px;border:2px solid var(--border);transition:transform .2s,box-shadow .2s;animation:cardIn .35s ease both;cursor:default;overflow:hidden;position:relative}
+  .stat:hover{transform:translateY(-3px) scale(1.02);box-shadow:var(--shadow)}
+  .stat::after{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.5);pointer-events:none}
+  .stat-label{font-size:10px;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.6px;font-weight:800}
+  .stat-val{font-size:28px;font-weight:900;color:var(--text);font-family:'Fredoka One',sans-serif}
+  .stat-sub{font-size:11px;color:var(--text3);margin-top:3px;font-weight:600}
+  .stat-icon{position:absolute;bottom:10px;right:12px;font-size:28px;opacity:.15}
+
+  /* FORM */
+  .form-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px}
+  label{font-size:11px;color:var(--text2);font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+  input,select,textarea{background:var(--bg);border:2px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;outline:none;font-family:'Nunito',sans-serif;font-weight:600;width:100%;transition:border-color .2s,box-shadow .2s}
+  input:focus,select:focus,textarea:focus{border-color:var(--red3);box-shadow:0 0 0 3px rgba(232,83,122,.12);background:#fff}
+  textarea{resize:vertical;min-height:60px}
+  select option{background:#fff;color:var(--text)}
+
+  /* BUTTONS */
+  .btn{border:none;border-radius:var(--radius-sm);padding:8px 16px;font-size:13px;cursor:pointer;font-weight:800;display:inline-flex;align-items:center;gap:6px;transition:all .2s;font-family:'Nunito',sans-serif;position:relative;overflow:hidden}
+  .btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background .15s}
+  .btn:hover::after{background:rgba(255,255,255,.15)}
+  .btn:active{transform:scale(.95)}
+  .btn-red{background:linear-gradient(135deg,var(--red3),var(--red));color:#fff;box-shadow:0 4px 14px rgba(232,83,122,.35)}
+  .btn-red:hover{box-shadow:0 6px 20px rgba(232,83,122,.45);transform:translateY(-1px)}
+  .btn-ghost{background:#fff;color:var(--text2);border:2px solid var(--border)}
+  .btn-ghost:hover{color:var(--red);border-color:var(--red3);background:var(--red-dim)}
+  .btn-danger{background:var(--red-dim);color:var(--red);border:2px solid rgba(232,83,122,.3)}
+  .btn-danger:hover{background:var(--red);color:#fff}
+  .btn-sm{padding:4px 10px;font-size:12px}
+  .btn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+  /* TABLE */
+  .tbl-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:2px solid var(--border)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:linear-gradient(135deg,var(--bg3),var(--red-dim));color:var(--text2);font-weight:800;text-align:left;padding:10px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.7px;border-bottom:2px solid var(--border)}
+  td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;font-weight:600;transition:background .15s}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--bg2)}
+  tbody tr{animation:rowSlide .25s ease both}
+  @keyframes rowSlide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+
+  /* BADGES */
+  .badge{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800}
+  .badge-green{background:var(--green-dim);color:var(--green-text)}
+  .badge-red{background:var(--red-dim);color:var(--red)}
+  .badge-amber{background:var(--amber-dim);color:var(--amber-text)}
+  .badge-blue{background:var(--blue-dim);color:var(--blue-text)}
+
+  /* SECTION HEADER */
+  .sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+  .sec-title{font-size:18px;font-weight:900;color:var(--text);display:flex;align-items:center;gap:9px;font-family:'Fredoka One',sans-serif}
+  .sec-title i{color:var(--red);font-size:22px}
+
+  /* ALERT */
+  .alert{border-radius:var(--radius-sm);padding:11px 16px;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:9px;font-weight:700;animation:slideDown .3s ease}
+  @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+  .alert-amber{background:var(--amber-dim);color:var(--amber-text);border:2px solid rgba(240,144,10,.2)}
+  .alert-green{background:var(--green-dim);color:var(--green-text);border:2px solid rgba(61,186,110,.2)}
+
+  /* SCHEDULE GRID */
+  .sched-grid{display:grid;grid-template-columns:80px repeat(7,1fr);gap:2px;background:var(--border);border-radius:var(--radius-sm);overflow:hidden;font-size:12px}
+  .sched-cell{background:#fff;padding:8px 6px;min-height:36px}
+  .sched-head{background:linear-gradient(135deg,var(--bg3),var(--red-dim));color:var(--text2);font-weight:800;font-size:10px;text-align:center;padding:9px 4px}
+  .sched-time{background:var(--bg3);color:var(--text3);font-size:10px;padding:8px 6px;text-align:right;font-weight:700}
+  .sched-block{background:linear-gradient(135deg,var(--red-dim),#ffd4e4);color:var(--red);border-radius:8px;padding:3px 6px;font-size:10px;cursor:pointer;margin-bottom:2px;border:1px solid rgba(232,83,122,.25);font-weight:700;transition:all .15s}
+  .sched-block:hover{background:var(--red);color:#fff;transform:scale(1.05)}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:24px;right:24px;background:#fff;border:2px solid var(--border);color:var(--text);border-radius:var(--radius);padding:12px 18px;font-size:13px;display:none;z-index:999;box-shadow:var(--shadow);align-items:center;gap:10px;font-weight:700}
+  #toast.show{display:flex;animation:toastIn .35s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes toastIn{from{opacity:0;transform:translateX(60px) scale(.8)}to{opacity:1;transform:translateX(0) scale(1)}}
+  #toast i{color:var(--green-text);font-size:18px}
+
+  /* DIVIDER */
+  .divider{border:none;border-top:2px solid var(--border);margin:14px 0}
+
+  .empty{color:var(--text3);font-size:13px;text-align:center;padding:28px 0;display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:700}
+  .empty i{font-size:32px;color:var(--border2)}
+  .empty::before{content:'( ˘ ³˘)';font-size:20px;display:block}
+
+  .search-bar{display:flex;gap:8px;align-items:center;flex:1}
+  .search-bar input{max-width:220px}
+
+  /* Dashboard quick items */
+  .quick-list{display:flex;flex-direction:column;gap:8px}
+  .quick-item{background:var(--bg);border-radius:var(--radius-sm);padding:11px 14px;display:flex;justify-content:space-between;align-items:center;border:2px solid var(--border);transition:all .2s;animation:cardIn .3s ease both}
+  .quick-item:hover{border-color:var(--border2);background:#fff;box-shadow:var(--shadow-sm)}
+  .qi-left{display:flex;flex-direction:column;gap:2px}
+  .qi-name{font-weight:800;font-size:13px}
+  .qi-sub{font-size:11px;color:var(--text2);font-weight:600}
+
+  .progress-bar{background:var(--border);border-radius:20px;height:7px;overflow:hidden;margin-top:5px}
+  .progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--red3),var(--red));transition:width .5s cubic-bezier(.34,1.56,.64,1)}
+  .progress-fill.green{background:linear-gradient(90deg,#7de8a8,var(--green))}
+  .progress-fill.amber{background:linear-gradient(90deg,#ffd06b,var(--amber))}
+
+  /* PAGE TRANSITION */
+  #main-content > *{animation:pageIn .3s ease both}
+  @keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+  /* CUTE DECORATIVE PILL ON CARDS */
+  .card-deco{display:inline-flex;align-items:center;gap:4px;background:var(--red-dim);color:var(--red);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:800;margin-left:auto}
+
+  @media print {
+    nav, header, .floaties { display: none !important; }
+    main { padding: 0 !important; }
+    body { background: #fff !important; color: #000 !important; }
+  }
+  @media (max-width: 600px) {
+    .grid4 { grid-template-columns: 1fr 1fr; }
+    .grid2 { grid-template-columns: 1fr; }
+    .form-row { flex-direction: column; }
+  }
+
+  /* STAGGER for grid items */
+  .grid4 .stat:nth-child(1){animation-delay:.05s}
+  .grid4 .stat:nth-child(2){animation-delay:.1s}
+  .grid4 .stat:nth-child(3){animation-delay:.15s}
+  .grid4 .stat:nth-child(4){animation-delay:.2s}
+  .grid2 .card:nth-child(1){animation-delay:.1s}
+  .grid2 .card:nth-child(2){animation-delay:.18s}
+</style>
+</head>
+<body>
+
+<!-- Floating background decorations -->
+<div class="floaties" id="floaties"></div>
+
+<div id="app">
+  <header>
+    <div class="logo">
+      <span class="logo-badge">PMR</span>
+      <span class="logo-heart">🏥</span>
+      <span>SiJaga UKS</span>
+    </div>
+    <div class="header-right">
+      <span class="hbadge"><span class="dot"></span> Aktif</span>
+      <span id="clock-display"></span>
+    </div>
+  </header>
+
+  <nav>
+    <button class="nav-btn active" onclick="showPage('dashboard')" id="nav-dashboard">
+      <i class="ti ti-layout-dashboard"></i>Dashboard<span class="nav-pip"></span>
+    </button>
+    <button class="nav-btn" onclick="showPage('pasien')" id="nav-pasien">
+      <i class="ti ti-stethoscope"></i>Data Pasien<span class="nav-pip"></span>
+    </button>
+    <button class="nav-btn" onclick="showPage('stok')" id="nav-stok">
+      <i class="ti ti-medicine-syrup"></i>Stok & Alat<span class="nav-pip"></span>
+    </button>
+    <button class="nav-btn" onclick="showPage('absensi')" id="nav-absensi">
+      <i class="ti ti-clipboard-check"></i>Absensi<span class="nav-pip"></span>
+    </button>
+    <button class="nav-btn" onclick="showPage('jadwal')" id="nav-jadwal">
+      <i class="ti ti-calendar-event"></i>Jadwal Jaga<span class="nav-pip"></span>
+    </button>
+    <button class="nav-btn" onclick="showPage('laporan')" id="nav-laporan">
+      <i class="ti ti-report-analytics"></i>Laporan<span class="nav-pip"></span>
+    </button>
+  </nav>
+
+  <main id="main-content"></main>
+</div>
+
+<div id="toast"><i class="ti ti-heart-filled"></i><span id="toast-msg"></span></div>
+
+<script>
+// Floating decorations
+(function() {
+  const emojis = ['💊','🩺','❤️','💉','🩹','⭐','✨','🌸','💗','🩻'];
+  const container = document.getElementById('floaties');
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'floatie';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.fontSize = (14 + Math.random() * 14) + 'px';
+    el.style.animationDuration = (10 + Math.random() * 16) + 's';
+    el.style.animationDelay = (Math.random() * 14) + 's';
+    container.appendChild(el);
+  }
+})();
+
+// =====================
+//   DATA STORE (localStorage)
+// =====================
+const DB = {
+  get(k) { try { return JSON.parse(localStorage.getItem('pmr_' + k) || 'null') } catch { return null } },
+  set(k, v) { localStorage.setItem('pmr_' + k, JSON.stringify(v)) },
+  def(k, v) { if (!this.get(k)) this.set(k, v) }
+};
+
+DB.def('pasien', [
+  { id: 1, tanggal: '2025-05-12', nama: 'Budi Santoso', kelas: 'X-A', keluhan: 'Pusing dan mual', tindakan: 'Istirahat, minum air', status: 'Sembuh' },
+  { id: 2, tanggal: '2025-05-13', nama: 'Siti Rahayu', kelas: 'XI-B', keluhan: 'Luka lecet di lutut', tindakan: 'Dibersihkan, diplester', status: 'Sembuh' },
+  { id: 3, tanggal: '2025-05-14', nama: 'Ahmad Fauzi', kelas: 'XII-A', keluhan: 'Sakit perut', tindakan: 'Diberi antasida', status: 'Dirujuk' },
+]);
+DB.def('stok', [
+  { id: 1, nama: 'Betadine', kategori: 'Obat', jumlah: 8, satuan: 'Botol', min: 5, kadaluarsa: '2026-08-01' },
+  { id: 2, nama: 'Perban Elastis', kategori: 'Alat', jumlah: 15, satuan: 'Buah', min: 5, kadaluarsa: '-' },
+  { id: 3, nama: 'Plester', kategori: 'Alat', jumlah: 3, satuan: 'Kotak', min: 5, kadaluarsa: '2026-03-01' },
+  { id: 4, nama: 'Paracetamol', kategori: 'Obat', jumlah: 50, satuan: 'Tablet', min: 20, kadaluarsa: '2025-12-01' },
+  { id: 5, nama: 'Antasida', kategori: 'Obat', jumlah: 12, satuan: 'Tablet', min: 10, kadaluarsa: '2026-01-15' },
+  { id: 6, nama: 'Termometer', kategori: 'Alat', jumlah: 2, satuan: 'Buah', min: 1, kadaluarsa: '-' },
+]);
+DB.def('anggota', [
+  { id: 1, nama: 'Reza Pratama', jabatan: 'Ketua', kelas: 'XI-A' },
+  { id: 2, nama: 'Dewi Lestari', jabatan: 'Wakil Ketua', kelas: 'XI-B' },
+  { id: 3, nama: 'Fajar Nugroho', jabatan: 'Anggota', kelas: 'X-A' },
+  { id: 4, nama: 'Nisa Amalia', jabatan: 'Anggota', kelas: 'X-B' },
+  { id: 5, nama: 'Rizki Aditya', jabatan: 'Anggota', kelas: 'X-C' },
+]);
+DB.def('absensi', []);
+DB.def('jadwal', [
+  { id: 1, hari: 'Senin', sesi: '07:00-10:00', anggota: 'Reza Pratama', lokasi: 'UKS' },
+  { id: 2, hari: 'Senin', sesi: '10:00-13:00', anggota: 'Dewi Lestari', lokasi: 'UKS' },
+  { id: 3, hari: 'Selasa', sesi: '07:00-10:00', anggota: 'Fajar Nugroho', lokasi: 'UKS' },
+  { id: 4, hari: 'Rabu', sesi: '10:00-13:00', anggota: 'Nisa Amalia', lokasi: 'UKS' },
+  { id: 5, hari: 'Kamis', sesi: '07:00-10:00', anggota: 'Rizki Aditya', lokasi: 'UKS' },
+]);
+
+// =====================
+//   UTILITIES
+// =====================
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+function today() { return new Date().toISOString().slice(0, 10); }
+function fmt(d) {
+  if (!d || d === '-') return '-';
+  const p = d.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+function setNav(id) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + id).classList.add('active');
+}
+
+setInterval(() => {
+  const now = new Date();
+  const el = document.getElementById('clock-display');
+  if (el) el.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}, 1000);
+
+// =====================
+//   ROUTER
+// =====================
+function showPage(p) {
+  setNav(p);
+  const m = document.getElementById('main-content');
+  m.style.opacity = '0';
+  m.style.transform = 'translateY(8px)';
+  m.style.transition = 'opacity .2s, transform .2s';
+  setTimeout(() => {
+    m.innerHTML = '';
+    pages[p](m);
+    m.style.opacity = '1';
+    m.style.transform = 'translateY(0)';
+  }, 150);
+}
+const pages = {};
+
+// =====================
+//   DASHBOARD
+// =====================
+pages.dashboard = function(m) {
+  const pasien = DB.get('pasien') || [];
+  const stok = DB.get('stok') || [];
+  const absensi = DB.get('absensi') || [];
+  const anggota = DB.get('anggota') || [];
+  const jadwal = DB.get('jadwal') || [];
+  const stokKritis = stok.filter(s => s.jumlah <= s.min);
+  const todayStr = today();
+  const todayAbs = absensi.filter(a => a.tanggal === todayStr);
+  const hadir = todayAbs.filter(a => a.status === 'Hadir').length;
+
+  m.innerHTML = `
+  <div class="sec-header">
+    <div class="sec-title"><i class="ti ti-layout-dashboard"></i>Dashboard ✨</div>
+    <span style="font-size:12px;color:var(--text2);font-weight:700;background:var(--bg3);padding:5px 12px;border-radius:20px;border:2px solid var(--border)">${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+  </div>
+  ${stokKritis.length ? `<div class="alert alert-amber"><i class="ti ti-alert-triangle"></i><strong>⚠️ ${stokKritis.length} item stok kritis!</strong> — ${stokKritis.map(s => s.nama).join(', ')}</div>` : ''}
+  <div class="grid4" style="margin-bottom:14px">
+    <div class="stat">
+      <div class="stat-label">🧑‍⚕️ Pasien Hari Ini</div>
+      <div class="stat-val">${pasien.filter(p => p.tanggal === todayStr).length}</div>
+      <div class="stat-sub">Total: ${pasien.length} pasien</div>
+      <span class="stat-icon">🩺</span>
+    </div>
+    <div class="stat">
+      <div class="stat-label">💊 Stok Kritis</div>
+      <div class="stat-val" style="color:${stokKritis.length ? 'var(--red)' : 'var(--green-text)'}">${stokKritis.length}</div>
+      <div class="stat-sub">${stok.length} item total</div>
+      <span class="stat-icon">💉</span>
+    </div>
+    <div class="stat">
+      <div class="stat-label">✅ Hadir Hari Ini</div>
+      <div class="stat-val">${hadir}</div>
+      <div class="stat-sub">dari ${anggota.length} anggota</div>
+      <span class="stat-icon">👥</span>
+    </div>
+    <div class="stat">
+      <div class="stat-label">📅 Jadwal Aktif</div>
+      <div class="stat-val">${jadwal.length}</div>
+      <div class="stat-sub">Total sesi terjadwal</div>
+      <span class="stat-icon">🗓️</span>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-stethoscope"></i>Pasien Terbaru <span class="card-deco">🏥 ${pasien.length} total</span></div>
+      <div class="quick-list">
+        ${pasien.slice(-3).reverse().map(p => `
+        <div class="quick-item">
+          <div class="qi-left">
+            <div class="qi-name">${p.nama} <span style="color:var(--text3);font-weight:600">(${p.kelas})</span></div>
+            <div class="qi-sub">${p.keluhan}</div>
+          </div>
+          <span class="badge ${p.status === 'Sembuh' ? 'badge-green' : p.status === 'Dirujuk' ? 'badge-amber' : 'badge-red'}">${p.status}</span>
+        </div>`).join('') || '<div class="empty"><i class="ti ti-notes-off"></i>Belum ada pasien</div>'}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-medicine-syrup"></i>Status Stok <span class="card-deco">💊 ${stok.length} item</span></div>
+      <div class="quick-list">
+        ${stok.slice(0, 5).map(s => {
+          const pct = Math.min(100, Math.round((s.jumlah / Math.max(s.min * 2, 1)) * 100));
+          const cls = s.jumlah <= s.min ? '' : 'green';
+          return `<div class="quick-item"><div class="qi-left" style="flex:1">
+            <div style="display:flex;justify-content:space-between">
+              <span class="qi-name">${s.nama}</span>
+              <span style="font-size:12px;color:var(--text2);font-weight:700">${s.jumlah} ${s.satuan}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
+          </div></div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+};
+
+// =====================
+//   DATA PASIEN
+// =====================
+pages.pasien = function(m) {
+  function render() {
+    const list = DB.get('pasien') || [];
+    const flt = (document.getElementById('srch-pasien')?.value || '').toLowerCase();
+    const filtered = list.filter(p =>
+      p.nama.toLowerCase().includes(flt) || p.kelas.toLowerCase().includes(flt)
+    );
+    document.getElementById('pasien-tbl').innerHTML = filtered.length
+      ? filtered.slice().reverse().map(p => `
+        <tr>
+          <td>${fmt(p.tanggal)}</td>
+          <td><strong>${p.nama}</strong></td>
+          <td>${p.kelas}</td>
+          <td>${p.keluhan}</td>
+          <td>${p.tindakan}</td>
+          <td><span class="badge ${p.status === 'Sembuh' ? 'badge-green' : p.status === 'Dirujuk' ? 'badge-amber' : 'badge-red'}">${p.status}</span></td>
+          <td><button class="btn btn-danger btn-sm" onclick="delPasien(${p.id})"><i class="ti ti-trash"></i></button></td>
+        </tr>`).join('')
+      : `<tr><td colspan="7"><div class="empty"><i class="ti ti-notes-off"></i>Belum ada data pasien</div></td></tr>`;
+  }
+
+  m.innerHTML = `
+  <div class="sec-header"><div class="sec-title"><i class="ti ti-stethoscope"></i>Data Pasien UKS 🩺</div></div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-plus"></i>Tambah Data Pasien</div>
+    <div class="form-row">
+      <div class="form-group"><label>Tanggal</label><input type="date" id="p-tgl" value="${today()}"></div>
+      <div class="form-group"><label>Nama Pasien</label><input type="text" id="p-nama" placeholder="Nama lengkap"></div>
+      <div class="form-group"><label>Kelas</label><input type="text" id="p-kelas" placeholder="cth: X-A"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Keluhan</label><input type="text" id="p-keluhan" placeholder="Keluhan pasien"></div>
+      <div class="form-group"><label>Tindakan</label><input type="text" id="p-tindakan" placeholder="Tindakan yang diberikan"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="p-status">
+          <option>Dalam Penanganan</option>
+          <option>Sembuh</option>
+          <option>Dirujuk</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-red" onclick="savePasien()"><i class="ti ti-device-floppy"></i>Simpan Data</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-header">
+      <div class="card-title" style="margin:0"><i class="ti ti-list"></i>Riwayat Pasien</div>
+      <div class="search-bar">
+        <input type="text" id="srch-pasien" placeholder="🔍 Cari nama / kelas..." oninput="renderPasienTbl()">
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Tanggal</th><th>Nama</th><th>Kelas</th><th>Keluhan</th><th>Tindakan</th><th>Status</th><th></th></tr></thead>
+        <tbody id="pasien-tbl"></tbody>
+      </table>
+    </div>
+  </div>`;
+
+  window.renderPasienTbl = render;
+  render();
+};
+
+window.savePasien = function() {
+  const nama = document.getElementById('p-nama').value.trim();
+  if (!nama) return toast('Nama pasien wajib diisi! 💕');
+  const list = DB.get('pasien') || [];
+  list.push({
+    id: Date.now(),
+    tanggal: document.getElementById('p-tgl').value,
+    nama,
+    kelas: document.getElementById('p-kelas').value,
+    keluhan: document.getElementById('p-keluhan').value,
+    tindakan: document.getElementById('p-tindakan').value,
+    status: document.getElementById('p-status').value
+  });
+  DB.set('pasien', list);
+  ['p-nama', 'p-kelas', 'p-keluhan', 'p-tindakan'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('p-status').value = 'Dalam Penanganan';
+  if (window.renderPasienTbl) renderPasienTbl();
+  toast('Data pasien disimpan! 🌸');
+};
+
+window.delPasien = function(id) {
+  if (!confirm('Hapus data pasien ini?')) return;
+  DB.set('pasien', (DB.get('pasien') || []).filter(p => p.id !== id));
+  if (window.renderPasienTbl) renderPasienTbl();
+  toast('Data dihapus 🗑️');
+};
+
+// =====================
+//   STOK & ALAT
+// =====================
+pages.stok = function(m) {
+  function render() {
+    const list = DB.get('stok') || [];
+    const flt = (document.getElementById('srch-stok')?.value || '').toLowerCase();
+    const filtered = list.filter(s =>
+      s.nama.toLowerCase().includes(flt) || s.kategori.toLowerCase().includes(flt)
+    );
+    document.getElementById('stok-tbl').innerHTML = filtered.length
+      ? filtered.map(s => {
+          const kritis = s.jumlah <= s.min;
+          return `<tr>
+            <td><strong>${s.nama}</strong></td>
+            <td><span class="badge ${s.kategori === 'Obat' ? 'badge-blue' : 'badge-amber'}">${s.kategori === 'Obat' ? '💊' : '🩺'} ${s.kategori}</span></td>
+            <td>
+              <span style="color:${kritis ? 'var(--red)' : 'var(--text)'};font-weight:800">${s.jumlah}</span>
+              ${kritis ? ' <span class="badge badge-red">⚠️ Kritis</span>' : ''}
+            </td>
+            <td>${s.satuan}</td>
+            <td style="color:var(--text2)">${fmt(s.kadaluarsa)}</td>
+            <td>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-sm" onclick="editStokQty(${s.id})"><i class="ti ti-edit"></i>Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="delStok(${s.id})"><i class="ti ti-trash"></i></button>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')
+      : `<tr><td colspan="6"><div class="empty"><i class="ti ti-package-off"></i>Belum ada data stok</div></td></tr>`;
+  }
+
+  const kritis = (DB.get('stok') || []).filter(s => s.jumlah <= s.min);
+  m.innerHTML = `
+  <div class="sec-header"><div class="sec-title"><i class="ti ti-medicine-syrup"></i>Stok Obat & Peralatan 💊</div></div>
+  ${kritis.length ? `<div class="alert alert-amber"><i class="ti ti-alert-triangle"></i>Stok kritis: <strong>${kritis.map(s => s.nama + ' (' + s.jumlah + ' ' + s.satuan + ')').join(', ')}</strong></div>` : ''}
+  <div class="card">
+    <div class="card-title"><i class="ti ti-plus"></i>Tambah Item</div>
+    <div class="form-row">
+      <div class="form-group"><label>Nama Item</label><input type="text" id="s-nama" placeholder="Nama obat/alat"></div>
+      <div class="form-group"><label>Kategori</label><select id="s-kat"><option>Obat</option><option>Alat</option></select></div>
+      <div class="form-group"><label>Jumlah</label><input type="number" id="s-jml" min="0" placeholder="0"></div>
+      <div class="form-group"><label>Satuan</label><input type="text" id="s-sat" placeholder="Tablet/Botol/Buah"></div>
+      <div class="form-group"><label>Stok Minimum</label><input type="number" id="s-min" min="0" placeholder="5"></div>
+      <div class="form-group"><label>Kadaluarsa</label><input type="date" id="s-exp"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-red" onclick="saveStok()"><i class="ti ti-device-floppy"></i>Simpan</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-header">
+      <div class="card-title" style="margin:0"><i class="ti ti-list"></i>Daftar Stok</div>
+      <input type="text" id="srch-stok" placeholder="🔍 Cari..." style="max-width:180px" oninput="renderStokTbl()">
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Nama</th><th>Kategori</th><th>Jumlah</th><th>Satuan</th><th>Kadaluarsa</th><th>Aksi</th></tr></thead>
+        <tbody id="stok-tbl"></tbody>
+      </table>
+    </div>
+  </div>`;
+
+  window.renderStokTbl = render;
+  render();
+};
+
+window.saveStok = function() {
+  const nama = document.getElementById('s-nama').value.trim();
+  if (!nama) return toast('Nama item wajib diisi! 💕');
+  const list = DB.get('stok') || [];
+  const exp = document.getElementById('s-exp').value;
+  list.push({
+    id: Date.now(),
+    nama,
+    kategori: document.getElementById('s-kat').value,
+    jumlah: parseInt(document.getElementById('s-jml').value) || 0,
+    satuan: document.getElementById('s-sat').value || 'Buah',
+    min: parseInt(document.getElementById('s-min').value) || 5,
+    kadaluarsa: exp || '-'
+  });
+  DB.set('stok', list);
+  ['s-nama', 's-jml', 's-sat', 's-min', 's-exp'].forEach(id => document.getElementById(id).value = '');
+  if (window.renderStokTbl) renderStokTbl();
+  toast('Item disimpan! 🌸');
+};
+
+window.editStokQty = function(id) {
+  const list = DB.get('stok') || [];
+  const item = list.find(s => s.id === id);
+  if (!item) return;
+  const newQty = prompt(`Jumlah baru untuk "${item.nama}" (saat ini: ${item.jumlah} ${item.satuan}):`, item.jumlah);
+  if (newQty === null) return;
+  item.jumlah = parseInt(newQty) || 0;
+  DB.set('stok', list);
+  if (window.renderStokTbl) renderStokTbl();
+  toast('Stok diperbarui! ✨');
+};
+
+window.delStok = function(id) {
+  if (!confirm('Hapus item ini?')) return;
+  DB.set('stok', (DB.get('stok') || []).filter(s => s.id !== id));
+  if (window.renderStokTbl) renderStokTbl();
+  toast('Item dihapus 🗑️');
+};
+
+// =====================
+//   ABSENSI
+// =====================
+pages.absensi = function(m) {
+  function renderAbs() {
+    const absensi = DB.get('absensi') || [];
+    const anggota = DB.get('anggota') || [];
+    const tgl = document.getElementById('abs-tgl').value;
+    const todayAbs = absensi.filter(a => a.tanggal === tgl);
+
+    const rows = anggota.map(an => {
+      const rec = todayAbs.find(a => a.anggotaId === an.id);
+      return `<tr>
+        <td><strong>${an.nama}</strong></td>
+        <td style="color:var(--text2)">${an.kelas}</td>
+        <td>${an.jabatan}</td>
+        <td>${rec
+          ? `<span class="badge ${rec.status === 'Hadir' ? 'badge-green' : rec.status === 'Izin' ? 'badge-amber' : 'badge-red'}">${rec.status}</span>`
+          : '<span style="color:var(--text3);font-size:12px;font-weight:700">Belum diisi</span>'}</td>
+        <td>
+          <div style="display:flex;gap:4px">
+            ${['Hadir', 'Izin', 'Sakit', 'Alpha'].map(s =>
+              `<button class="btn btn-ghost btn-sm" style="${rec?.status === s ? 'border-color:var(--red3);color:var(--red);background:var(--red-dim)' : ''}" onclick="setAbsen(${an.id},'${s}')">${s}</button>`
+            ).join('')}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    const hadir = todayAbs.filter(a => a.status === 'Hadir').length;
+    const izin = todayAbs.filter(a => a.status === 'Izin').length;
+    const absen = todayAbs.filter(a => ['Sakit', 'Alpha'].includes(a.status)).length;
+
+    document.getElementById('abs-tbl').innerHTML = rows ||
+      '<tr><td colspan="5"><div class="empty">Belum ada anggota terdaftar</div></td></tr>';
+    document.getElementById('abs-summary').innerHTML = `
+      <span class="badge badge-green">✅ ${hadir} Hadir</span>
+      <span class="badge badge-amber">📝 ${izin} Izin</span>
+      <span class="badge badge-red">❌ ${absen} Absen</span>`;
+  }
+
+  function renderAnggota() {
+    const ang = DB.get('anggota') || [];
+    document.getElementById('ang-tbl').innerHTML = ang.map(a =>
+      `<tr>
+        <td>${a.nama}</td>
+        <td>${a.kelas}</td>
+        <td>${a.jabatan}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="delAnggota(${a.id})"><i class="ti ti-trash"></i></button></td>
+      </tr>`
+    ).join('') || '<tr><td colspan="4"><div class="empty">Belum ada anggota</div></td></tr>';
+  }
+
+  m.innerHTML = `
+  <div class="sec-header"><div class="sec-title"><i class="ti ti-clipboard-check"></i>Absensi Anggota 📋</div></div>
+  <div class="card">
+    <div class="sec-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <label style="font-size:12px;color:var(--text2);font-weight:800">TANGGAL</label>
+        <input type="date" id="abs-tgl" value="${today()}" onchange="renderAbsTbl()" style="width:160px">
+      </div>
+      <div id="abs-summary" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Nama</th><th>Kelas</th><th>Jabatan</th><th>Status</th><th>Tandai Kehadiran</th></tr></thead>
+        <tbody id="abs-tbl"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-users"></i>Kelola Anggota 👥</div>
+    <div class="form-row">
+      <div class="form-group"><label>Nama</label><input type="text" id="ang-nama" placeholder="Nama anggota"></div>
+      <div class="form-group"><label>Kelas</label><input type="text" id="ang-kls" placeholder="X-A"></div>
+      <div class="form-group"><label>Jabatan</label>
+        <select id="ang-jab">
+          <option>Anggota</option><option>Wakil Ketua</option><option>Ketua</option>
+          <option>Sekretaris</option><option>Bendahara</option>
+        </select>
+      </div>
+      <div class="form-group" style="justify-content:flex-end">
+        <button class="btn btn-red" onclick="addAnggota()" style="margin-top:16px"><i class="ti ti-plus"></i>Tambah Anggota</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Nama</th><th>Kelas</th><th>Jabatan</th><th></th></tr></thead>
+        <tbody id="ang-tbl"></tbody>
+      </table>
+    </div>
+  </div>`;
+
+  window.renderAbsTbl = renderAbs;
+  window.renderAngTbl = renderAnggota;
+  renderAbs();
+  renderAnggota();
+};
+
+window.setAbsen = function(anggotaId, status) {
+  const tgl = document.getElementById('abs-tgl').value;
+  const absensi = DB.get('absensi') || [];
+  const idx = absensi.findIndex(a => a.anggotaId === anggotaId && a.tanggal === tgl);
+  if (idx >= 0) absensi[idx].status = status;
+  else absensi.push({ id: Date.now(), tanggal: tgl, anggotaId, status });
+  DB.set('absensi', absensi);
+  if (window.renderAbsTbl) renderAbsTbl();
+};
+
+window.addAnggota = function() {
+  const nama = document.getElementById('ang-nama').value.trim();
+  if (!nama) return toast('Nama wajib diisi! 💕');
+  const list = DB.get('anggota') || [];
+  list.push({ id: Date.now(), nama, kelas: document.getElementById('ang-kls').value, jabatan: document.getElementById('ang-jab').value });
+  DB.set('anggota', list);
+  document.getElementById('ang-nama').value = '';
+  document.getElementById('ang-kls').value = '';
+  if (window.renderAngTbl) renderAngTbl();
+  toast('Anggota ditambahkan! 🌸');
+};
+
+window.delAnggota = function(id) {
+  if (!confirm('Hapus anggota ini?')) return;
+  DB.set('anggota', (DB.get('anggota') || []).filter(a => a.id !== id));
+  if (window.renderAngTbl) renderAngTbl();
+  toast('Anggota dihapus 🗑️');
+};
+
+// =====================
+//   JADWAL JAGA
+// =====================
+const HARI = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const SESI = ['07:00-10:00', '10:00-13:00', '13:00-15:00'];
+
+pages.jadwal = function(m) {
+  function renderGrid() {
+    const jadwal = DB.get('jadwal') || [];
+    const heads = HARI.map(h => `<div class="sched-head">${h}</div>`).join('');
+    const rows = SESI.map(sesi => {
+      const cells = HARI.map(hari => {
+        const js = jadwal.filter(j => j.hari === hari && j.sesi === sesi);
+        return `<div class="sched-cell">${js.map(j =>
+          `<div class="sched-block" title="Klik untuk hapus" onclick="delJadwal(${j.id})">🗑 ${j.anggota}</div>`
+        ).join('')}</div>`;
+      }).join('');
+      return `<div class="sched-time">${sesi}</div>${cells}`;
+    }).join('');
+    document.getElementById('sched-grid').innerHTML =
+      `<div class="sched-head" style="background:var(--bg3)"></div>${heads}${rows}`;
+  }
+
+  const anggota = DB.get('anggota') || [];
+  m.innerHTML = `
+  <div class="sec-header"><div class="sec-title"><i class="ti ti-calendar-event"></i>Jadwal Jaga 📅</div></div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-plus"></i>Tambah Jadwal</div>
+    <div class="form-row">
+      <div class="form-group"><label>Anggota</label>
+        <select id="j-ang">
+          <option value="">-- Pilih Anggota --</option>
+          ${anggota.map(a => `<option>${a.nama}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label>Hari</label>
+        <select id="j-hari">${HARI.map(h => `<option>${h}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Sesi</label>
+        <select id="j-sesi">${SESI.map(s => `<option>${s}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Lokasi</label>
+        <input type="text" id="j-lok" value="UKS" placeholder="UKS">
+      </div>
+      <div class="form-group" style="justify-content:flex-end">
+        <button class="btn btn-red" onclick="saveJadwal()" style="margin-top:16px">
+          <i class="ti ti-calendar-plus"></i>Tambah Jadwal
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-calendar-week"></i>Grid Jadwal Mingguan 🗓️
+      <span style="font-size:11px;color:var(--text3);font-weight:600;margin-left:4px">(klik blok untuk hapus)</span>
+    </div>
+    <div style="overflow-x:auto">
+      <div id="sched-grid" class="sched-grid"></div>
+    </div>
+  </div>`;
+
+  window.renderJadwalGrid = renderGrid;
+  renderGrid();
+};
+
+window.saveJadwal = function() {
+  const ang = document.getElementById('j-ang').value;
+  if (!ang) return toast('Pilih anggota terlebih dahulu! 💕');
+  const list = DB.get('jadwal') || [];
+  list.push({
+    id: Date.now(),
+    anggota: ang,
+    hari: document.getElementById('j-hari').value,
+    sesi: document.getElementById('j-sesi').value,
+    lokasi: document.getElementById('j-lok').value
+  });
+  DB.set('jadwal', list);
+  if (window.renderJadwalGrid) renderJadwalGrid();
+  toast('Jadwal ditambahkan! 📅');
+};
+
+window.delJadwal = function(id) {
+  DB.set('jadwal', (DB.get('jadwal') || []).filter(j => j.id !== id));
+  if (window.renderJadwalGrid) renderJadwalGrid();
+  toast('Jadwal dihapus 🗑️');
+};
+
+// =====================
+//   LAPORAN
+// =====================
+pages.laporan = function(m) {
+  const pasien = DB.get('pasien') || [];
+  const stok = DB.get('stok') || [];
+  const absensi = DB.get('absensi') || [];
+  const anggota = DB.get('anggota') || [];
+
+  const totalHadir = absensi.filter(a => a.status === 'Hadir').length;
+  const totalAlpha = absensi.filter(a => a.status === 'Alpha').length;
+  const dirujuk = pasien.filter(p => p.status === 'Dirujuk').length;
+
+  const keluhanMap = {};
+  pasien.forEach(p => {
+    const k = p.keluhan.toLowerCase().split(/[,;.]/)[0].trim();
+    keluhanMap[k] = (keluhanMap[k] || 0) + 1;
+  });
+  const topKeluhan = Object.entries(keluhanMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  m.innerHTML = `
+  <div class="sec-header">
+    <div class="sec-title"><i class="ti ti-report-analytics"></i>Laporan & Rekapitulasi 📊</div>
+    <button class="btn btn-ghost" onclick="window.print()"><i class="ti ti-printer"></i>Cetak Laporan</button>
+  </div>
+  <div class="grid4" style="margin-bottom:14px">
+    <div class="stat"><div class="stat-label">🏥 Total Pasien</div><div class="stat-val">${pasien.length}</div><div class="stat-sub">${dirujuk} dirujuk</div><span class="stat-icon">🩺</span></div>
+    <div class="stat"><div class="stat-label">✅ Total Kehadiran</div><div class="stat-val">${totalHadir}</div><div class="stat-sub">${totalAlpha} alpha</div><span class="stat-icon">👥</span></div>
+    <div class="stat"><div class="stat-label">💊 Item Stok</div><div class="stat-val">${stok.length}</div><div class="stat-sub">${stok.filter(s => s.jumlah <= s.min).length} kritis</div><span class="stat-icon">💉</span></div>
+    <div class="stat"><div class="stat-label">👥 Total Anggota</div><div class="stat-val">${anggota.length}</div><div class="stat-sub">aktif terdaftar</div><span class="stat-icon">⭐</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-bar"></i>Keluhan Terbanyak</div>
+      ${topKeluhan.length
+        ? topKeluhan.map(([k, v]) => {
+            const pct = Math.round((v / pasien.length) * 100);
+            return `<div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                <span style="font-size:13px;text-transform:capitalize;font-weight:700">${k}</span>
+                <span style="font-size:12px;color:var(--text2);font-weight:700">${v}x (${pct}%)</span>
+              </div>
+              <div class="progress-bar" style="height:9px">
+                <div class="progress-fill" style="width:${pct}%"></div>
+              </div>
+            </div>`;
+          }).join('')
+        : '<div class="empty"><i class="ti ti-chart-off"></i>Belum ada data pasien</div>'}
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-package"></i>Kondisi Stok</div>
+      ${stok.map(s => {
+        const pct = Math.min(100, Math.round((s.jumlah / Math.max(s.min * 2, 1)) * 100));
+        const cls = s.jumlah <= s.min ? '' : 'green';
+        return `<div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:700">${s.nama}</span>
+            <span style="font-size:11px;color:var(--text2);font-weight:700">${s.jumlah} ${s.satuan}</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('') || '<div class="empty"><i class="ti ti-package-off"></i>Belum ada data stok</div>'}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-clipboard-list"></i>Log Pasien Lengkap</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Tanggal</th><th>Nama</th><th>Kelas</th><th>Keluhan</th><th>Tindakan</th><th>Status</th></tr></thead>
+        <tbody>
+          ${pasien.slice().reverse().map(p => `
+          <tr>
+            <td>${fmt(p.tanggal)}</td>
+            <td>${p.nama}</td>
+            <td>${p.kelas}</td>
+            <td>${p.keluhan}</td>
+            <td>${p.tindakan}</td>
+            <td><span class="badge ${p.status === 'Sembuh' ? 'badge-green' : p.status === 'Dirujuk' ? 'badge-amber' : 'badge-red'}">${p.status}</span></td>
+          </tr>`).join('') || '<tr><td colspan="6"><div class="empty">Belum ada data</div></td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+};
+
+// =====================
+//   INIT
+// =====================
+showPage('dashboard');
+</script>
+</body>
+</html>
